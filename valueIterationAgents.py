@@ -60,11 +60,11 @@ class ValueIterationAgent(ValueEstimationAgent):
         self.runValueIteration()
 
     def runValueIteration(self):
-        # Write value iteration code here
         "*** YOUR CODE HERE ***"
         # Initialize values to 0 for every state
         for state in self.mdp.getStates():
             self.values[state] = 0
+
         for i in range(self.iterations):
             newValues = self.values.copy()
             for state in self.values.keys():
@@ -107,9 +107,11 @@ class ValueIterationAgent(ValueEstimationAgent):
         if not possibleActions:
             return None
 
+        # Returns the action with the maximum sum of the products of next
+        # possible states and corresponding probabilities
         return max(possibleActions, key = lambda action:
-                    sum([self.values[nextState] * prob for (nextState, prob) \
-                         in self.mdp.getTransitionStatesAndProbs(state, action)]))
+                    sum([self.values[sPrime] * prob for (sPrime, prob) in \
+                         self.mdp.getTransitionStatesAndProbs(state, action)]))
 
     def getPolicy(self, state):
         return self.computeActionFromValues(state)
