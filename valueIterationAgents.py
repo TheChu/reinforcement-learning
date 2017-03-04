@@ -170,8 +170,9 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
         * Please read learningAgents.py before reading this.*
 
         A PrioritizedSweepingValueIterationAgent takes a Markov decision process
-        (see mdp.py) on initialization and runs prioritized sweeping value iteration
-        for a given number of iterations using the supplied parameters.
+        (see mdp.py) on initialization and runs prioritized sweeping value
+        iteration for a given number of iterations using the supplied
+        parameters.
     """
     def __init__(self, mdp, discount = 0.9, iterations = 100, theta = 1e-5):
         """
@@ -184,3 +185,52 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        states = self.mdp.getStates()
+        predecessors = self.getPredecessors()
+
+        # Initialize an empty priority queue
+        queue = util.PriorityQueue()
+
+        # Push each state in the priority queue
+        for state in [s for s in states if not self.mdp.isTerminal(s)]:
+            queue.push(state, -self.getDiff(state))
+
+        for i in range(self.iterations):
+            if queue.isEmpty():
+                break
+
+            # Pop a state off the pririty queue and update its value in
+            # self.values
+            state = queue.pop()
+            self.values[state] = self.getHighestQValue(state)
+
+            # Push predecessors in the priority queue
+            for predecessor in predecessors[state]:
+                diff = self.getDiff(predecessor)
+
+                if diff > self.theta:
+                    queue.update(predecessor, -diff)
+
+    def getPredecessors(self):
+        states = self.mdp.getStates()
+
+        # Initialize predecessors as a set of sets for all states
+        predecessors = {}
+        for state in states:
+            predecessors[state] = {}
+
+        # Compute predecessors of all states
+        for state in states:
+            for action in self.mdp.getPossibleActions(state):
+                for (nextState, _) in \
+                        self.mdp.getTransitionStatesAndProbs(state, action):
+                    predecessors[nextState][state] = True
+
+        return predecessors
+
+    def getDiff(self, state):
+        return abs(self.values[state] - self.getHighestQValue(state))
+
+    def getHighestQValue(self, state):
+        return max([self.computeQValueFromValues(state, action) \
+                    for action in self.mdp.getPossibleActions(state)])
